@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ultimate Tic-Tac-Toe</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+      background: -webkit-linear-gradient(#fff, #00e0ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .mode-selector {
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease-in;
+    }
+
+    button.mode {
+      background-color: #00e0ff33;
+      border: 2px solid #00e0ff;
+      color: white;
+      font-size: 1.1em;
+      padding: 12px 24px;
+      margin: 0 10px;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: 0.3s;
+      box-shadow: 0 0 10px #00e0ff77;
+    }
+
+    button.mode:hover {
+      background-color: #00e0ff;
+      color: #0f2027;
+    }
+
+    button.mode.selected {
+      background-color: #00ff7f;
+      color: #0f2027;
+      border-color: #00ff7f;
+    }
+
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 110px);
+      grid-gap: 10px;
+      perspective: 800px;
+    }
+
+    .cell {
+      width: 110px;
+      height: 110px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      font-size: 2.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.4s;
+      box-shadow: 0 5px 15px rgba(0, 224, 255, 0.3);
+      transform-style: preserve-3d;
+    }
+
+    .cell:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05) rotateY(10deg);
+    }
+
+    .cell.X {
+      color: #ff3c78;
+      text-shadow: 0 0 10px #ff3c78aa;
+    }
+
+    .cell.O {
+      color: #00e0ff;
+      text-shadow: 0 0 10px #00e0ffaa;
+    }
+
+    #message {
+      margin-top: 25px;
+      font-size: 1.7em;
+      font-weight: bold;
+      text-shadow: 0 0 5px white;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Ultimate Tic Tac Toe ✨</h1>
+  <div class="mode-selector">
+    <button class="mode" onclick="setMode('2P')">2 Player</button>
+    <button class="mode" onclick="setMode('AI')">Computer</button>
+  </div>
+  <div id="board"></div>
+  <div id="message"></div>
+
+  <script>
+    const board = document.getElementById('board');
+    const message = document.getElementById('message');
+    let mode = '2P';
+    let currentPlayer = 'X';
+    let cells = Array(9).fill('');
+    let gameOver = false;
+
+    const winPatterns = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+
+    function setMode(selectedMode) {
+      mode = selectedMode;
+      document.querySelectorAll('button.mode').forEach(btn => btn.classList.remove('selected'));
+      if (selectedMode === '2P') {
+        document.querySelector('button.mode:nth-child(1)').classList.add('selected');
+      } else {
+        document.querySelector('button.mode:nth-child(2)').classList.add('selected');
+      }
+      resetGame();
+    }
+
+    function resetGame() {
+      board.innerHTML = '';
+      cells = Array(9).fill('');
+      currentPlayer = 'X';
+      gameOver = false;
+      message.textContent = '';
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', handleClick);
+        board.appendChild(cell);
+      }
+    }
+
+    function handleClick(e) {
+      const idx = e.target.dataset.index;
+      if (cells[idx] !== '' || gameOver) return;
+      cells[idx] = currentPlayer;
+      e.target.textContent = currentPlayer;
+      e.target.classList.add(currentPlayer);
+
+      if (checkWin(currentPlayer)) {
+        message.textContent = `${currentPlayer} Wins! 🎉`;
+        gameOver = true;
+        return;
+      } else if (!cells.includes('')) {
+        message.textContent = `It's a Draw 🤝`;
+        gameOver = true;
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      if (mode === 'AI' && currentPlayer === 'O') setTimeout(makeAIMove, 400);
+    }
+
+    function checkWin(player) {
+      return winPatterns.some(pattern => 
+        pattern.every(i => cells[i] === player)
+      );
+    }
+
+    function makeAIMove() {
+      if (gameOver) return;
+
+      // 1. Try to win
+      for (let i = 0; i < 9; i++) {
+        if (cells[i] === '') {
+          cells[i] = 'O';
+          if (checkWin('O')) {
+            placeMove(i);
+            return;
+          }
+          cells[i] = '';
+        }
+      }
+
+      // 2. Block opponent's win
+      for (let i = 0; i < 9; i++) {
+        if (cells[i] === '') {
+          cells[i] = 'X';
+          if (checkWin('X')) {
+            cells[i] = 'O';
+            placeMove(i);
+            return;
+          }
+          cells[i] = '';
+        }
+      }
+
+      // 3. Pick center
+      if (cells[4] === '') {
+        cells[4] = 'O';
+        placeMove(4);
+        return;
+      }
+
+      // 4. Pick random corner
+      const corners = [0, 2, 6, 8].filter(i => cells[i] === '');
+      if (corners.length) {
+        const idx = corners[Math.floor(Math.random() * corners.length)];
+        cells[idx] = 'O';
+        placeMove(idx);
+        return;
+      }
+
+      // 5. Pick any
+      let empty = cells.map((val, i) => val === '' ? i : null).filter(i => i !== null);
+      let idx = empty[Math.floor(Math.random() * empty.length)];
+      cells[idx] = 'O';
+      placeMove(idx);
+    }
+
+    function placeMove(idx) {
+      const cellDiv = board.querySelector(`[data-index='${idx}']`);
+      cellDiv.textContent = 'O';
+      cellDiv.classList.add('O');
+
+      if (checkWin('O')) {
+        message.textContent = `O Wins! 💻`;
+        gameOver = true;
+      } else if (!cells.includes('')) {
+        message.textContent = `It's a Draw 🤝`;
+        gameOver = true;
+      } else {
+        currentPlayer = 'X';
+      }
+    }
+
+    resetGame();
+  </script>
+</body>
+</html>
