@@ -19,7 +19,7 @@ Play solo against a smart AI 🤖 or with a friend in 2-Player mode 👥 — all
 
 ## 🌐 Live Demo
 
-🔗 [View Game](https://kaleemkhan1708.github.io/Tic-Tac-Toe/)
+🔗 [View Game](https://kaleemkhan1708.github.io/Tic-Tac-Toe/tic-tac-toe/)
 
 ---
 
